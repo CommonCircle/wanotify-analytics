@@ -5,7 +5,7 @@ require __DIR__ . '/vendor/autoload.php';
 // $spreadsheetId = '12f2WBV2VJStDefgCQBrPG2xWNVCC9n2flwIK-JvUjZI'; // test sheet
 $spreadsheetId = '13cBp0oCkmeABBWDbySnwTF2Nr3Eqz38baqrTOK-Yqu0';
 $ios_sheetName = "iOS";
-$web_sheetName = "wanotify.uw.edu";
+$web_sheetName = "EN data";
 $ios_sheetId = 0;
 $web_sheetId = 263246219;
 $range = "A1"; // update full sheet
@@ -48,10 +48,12 @@ $install_data_fields = array_keys($install_data_fields);
 array_multisort($install_data_fields);
 array_unshift($install_data_fields, "HealthENBuddy");
 array_unshift($install_data_fields, "Settings Total");
+$web_data_fields = array_keys($web_data_fields);
+array_multisort($web_data_fields);
 
 $new_ios_values = array();
 foreach ($installs_datetimes as $datetime) {
-    $row = array();
+    $ios_row = array();
     if (isset($data_by_datetime[$datetime])) {
         $settings_total = 0;
         foreach ($install_data_fields as $field) {
@@ -59,13 +61,14 @@ foreach ($installs_datetimes as $datetime) {
             if (!($field == "HealthENBuddy" || preg_match("/[^a-zA-Z\d%]/", $field))) {
                 $settings_total += $value;
             }
-            $row[] = $value;
+            $ios_row[] = $value;
         }
-        $row[0] = $settings_total; // Fill in Settings sum column
+        $ios_row[0] = $settings_total; // Fill in Settings sum column
     }
-    array_unshift($row, $datetime); // Add datetime to first col
-    $new_ios_values[] = $row;
+    array_unshift($ios_row, $datetime); // Add datetime to first col
+    $new_ios_values[] = $ios_row;
 }
+
 array_unshift($install_data_fields, "Date Time");
 
 // Get useragent language mapping
@@ -81,6 +84,23 @@ foreach ($install_data_fields as $i => $field) {
 }
 
 array_unshift($new_ios_values, $install_data_fields);
+
+$new_web_values = array();
+foreach ($installs_datetimes as $datetime) {
+    $web_row = array();
+    if (isset($data_by_datetime[$datetime])) {
+        foreach ($web_data_fields as $field) {
+            $value = $data_by_datetime[$datetime][$field]['200'] ?? 0;
+            $web_row[] = $value;
+        }
+    }
+    array_unshift($web_row, $datetime); // Add datetime to first col
+    $new_web_values[] = $web_row;
+}
+
+array_unshift($web_data_fields, "Date Time");
+
+array_unshift($new_web_values, $web_data_fields);
 
 // Clear the sheet of all old values
 $requests = [
@@ -105,6 +125,30 @@ $params = [
     'valueInputOption' => 'USER_ENTERED'
 ];
 $result = $service->spreadsheets_values->update($spreadsheetId, $ios_update_range, $body, $params);
+
+// Clear the sheet of all old values
+$requests = [
+    new Google_Service_Sheets_Request([
+        'updateCells' => [
+            'range' => [
+                'sheetId' => $web_sheetId
+            ],
+            'fields' => '*'
+        ]
+    ])
+];
+$batchUpdateRequest = new Google_Service_Sheets_BatchUpdateSpreadsheetRequest([
+    'requests' => $requests
+]);
+$response = $service->spreadsheets->batchUpdate($spreadsheetId, $batchUpdateRequest);
+
+$body = new Google_Service_Sheets_ValueRange([
+    'values' => $new_web_values
+]);
+$params = [
+    'valueInputOption' => 'USER_ENTERED'
+];
+$result = $service->spreadsheets_values->update($spreadsheetId, $web_update_range, $body, $params);
 
 
 function generateDateTimes($time_start, $time_finish, $time_interval) {
