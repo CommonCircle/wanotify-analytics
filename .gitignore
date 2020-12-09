@@ -1,2 +1,3 @@
-analytics-output/*
+analytics_output/*
 vendor/*
+inputs/*
