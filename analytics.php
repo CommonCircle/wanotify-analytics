@@ -17,15 +17,31 @@ $combine = array(
     "/cc-exposures-logo-green.png" => array("iOS installs"),
     "/wa-en-banner-green.png" => array("iOS installs")
 );
-$startDate = date_create_from_format('Y-m-d', '2020-11-01');
-$siteInterval = 'daily';
-$resourceInterval = 'hourly'; // daily or hourly
+$start_date = date_create_from_format('Y-m-d', '2020-11-01');
+$end_date = date_create_from_format('Y-m-d', null);
+$site_interval = 'daily';
+$resource_interval = 'hourly'; // daily or hourly
 
 // Append archived log files and current
 $log_files = explode("\n", shell_exec("find /var/log/apache2/2020/11 -maxdepth 1 -iname 'ssl-wanotify*_access*'"));
 $log_files2 = explode("\n", shell_exec("find /var/log/apache2/2020/12 -maxdepth 1 -iname 'ssl-wanotify*_access*'"));
 $log_files3 = explode("\n", shell_exec("find /var/log/apache2 -maxdepth 1 -iname 'ssl-wanotify*_access*'"));
 $log_files = array_merge($log_files, $log_files2, $log_files3);
+
+$one_month = new DateInterval('P1M');
+$curr_date = $start_date;
+$log_files = array();
+
+// find params
+$log_base_folder = "/var/log/apache2";
+$max_depth = 1;
+$search_string = "ssl-wanotify*_access*";
+// get access log archives
+while ($curr_date <= $end_date){
+    $log_files = array_merge($log_files, explode("\n", shell_exec("find $log_base_folder/{$curr_date->format('Y')}/{$curr_date->format('m')} -maxdepth $max_depth -iname '$search_string'")));
+    $curr_date = $curr_date + $one_month;
+}
+$log_files = array_merge($log_files, explode("\n", shell_exec("find $log_base_folder -maxdepth $max_depth -iname '$search_string'")));
 // // $log_files = array("./ssl-test.log"); // test
 array_multisort($log_files);
 // $log_arr = array();
@@ -173,7 +189,7 @@ foreach ($log_files as $filename) {
                 $content = str_replace($match[0], "", $content);
             }
 
-            if (date_in_range($date, $startDate)) {
+            if (date_in_range($date, $start_date)) {
                 $aliases = array($page);
                 if (isset($combine[$page])) {
                     $aliases = array_merge($aliases, $combine[$page]);
@@ -206,7 +222,7 @@ foreach ($log_files as $filename) {
                             $key .= " $user_agent";
                         }
                         $time_key = $date;
-                        if ($resourceInterval == 'hourly') {
+                        if ($resource_interval == 'hourly') {
                             $time_key .= " $hour";
                         }
                         if (!isset($resource_stats[$key][$time_key])) {
@@ -310,7 +326,7 @@ foreach ($log_files as $filename) {
 //         $all = str_replace($match[0], "", $all);
 //     }
 
-//     if (date_in_range($date, $startDate)) {
+//     if (date_in_range($date, $start_date)) {
 //         $aliases = array($page);
 //         if (isset($combine[$page])) {
 //             $aliases = array_merge($aliases, $combine[$page]);
@@ -343,7 +359,7 @@ foreach ($log_files as $filename) {
 //                     $key .= " $user_agent";
 //                 }
 //                 $time_key = $date;
-//                 if ($resourceInterval == 'hourly') {
+//                 if ($resource_interval == 'hourly') {
 //                     $time_key .= " $hour";
 //                 }
 //                 if (!isset($resource_stats[$key][$time_key])) {
@@ -375,7 +391,7 @@ foreach ($log_files as $filename) {
 //==== d3 Outputs ===============================
 
 // Format and flatten daily site stats for d3
-$site_out = "./site_stats_$siteInterval.json";
+$site_out = "./site_stats_$site_interval.json";
 $site_handle = fopen($site_out, 'w');
 echo "Site data: $site_out\n";
 foreach($site_stats as $day => $stats) {
@@ -392,7 +408,7 @@ foreach($resource_stats as $resource => $time_stats) {
     }
     $resource_stats_flat = array_merge($resource_stats_flat, array_values($resource_stats[$resource]));
 }
-$resource_out = "./resource_stats_$resourceInterval.json";
+$resource_out = "./resource_stats_$resource_interval.json";
 $resource_handle = fopen($resource_out, 'w');
 echo "Resource data: $resource_out\n";
 fwrite($resource_handle, json_encode($resource_stats_flat, JSON_PRETTY_PRINT));
@@ -429,15 +445,15 @@ foreach($resources as $page => $dates) {
 //===============================================
 
 $end_dt = new DateTime('now', new DateTimeZone($tz));
-echo "End time: {$end_dt->format('Y-m-d H:i:s')}";
+echo "End time: {$end_dt->format('Y-m-d H:i:s')}\n";
 fclose($txt_handle);
 fclose($site_handle);
 fclose($resource_handle);
 
 //=== function defs =============================
-function date_in_range($dateStr, $startDate=null, $stopDate=null) {
-    $date = date_create_from_format('d/M/Y', $dateStr);
-    $track = !(isset($startDate) && $date < $startDate || isset($stopDate) && $date > $stopDate);
+function date_in_range($date_str, $start_date=null, $stop_date=null) {
+    $date = date_create_from_format('d/M/Y', $date_str);
+    $track = !(isset($start_date) && $date < $start_date || isset($stop_date) && $date > $stop_date);
     return $track;
 }
 
