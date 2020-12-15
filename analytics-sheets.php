@@ -18,7 +18,21 @@ $client->setScopes([\Google_Service_Sheets::SPREADSHEETS]);
 $client->setAccessType('offline');
 $client->setAuthConfig(__DIR__ . '/enxsheets-credentials.json');
 
-$service = new Google_Service_Sheets($client);
+$service;
+try {
+    $service = new Google_Service_Sheets($client);
+} catch (Exception $e) {
+    echo "Error creating service:\n";
+    echo $e."\n";
+    echo "Retrying...\n";
+    sleep(30);
+    try {
+        $service = new Google_Service_Sheets($client);
+    } catch (Exception $e) {
+        "Failed.\n";
+        exit;
+    }
+}
 
 $time_finish = new DateTime(); // now
 $time_interval = new DateInterval('PT1H');
@@ -71,10 +85,25 @@ foreach ($installs_datetimes as $datetime) {
 
 array_unshift($install_data_fields, "Date Time");
 
-// Get useragent language mapping
+// Get ios useragent language mapping
 $language_range = "UserAgentTranslations!A2:B50";
-$response = $service->spreadsheets_values->get($spreadsheetId, $language_range);
-$language_values = $response->getValues();
+$language_values;
+try {
+    $response = $service->spreadsheets_values->get($spreadsheetId, $language_range);
+    $language_values = $response->getValues();
+} catch (Exception $e) {
+    echo "Error getting languages:\n";
+    echo $e."\n";
+    echo "Retrying...\n";
+    sleep(30);
+    try {
+        $response = $service->spreadsheets_values->get($spreadsheetId, $language_range);
+        $language_values = $response->getValues();
+    } catch (Exception $e) {
+        "Failed.\n";
+        exit;
+    }
+}
 $useragent_mappings = array();
 foreach ($language_values as $v) {
     $useragent_mappings[$v[1]] = $v[0];
@@ -102,7 +131,7 @@ array_unshift($web_data_fields, "Date Time");
 
 array_unshift($new_web_values, $web_data_fields);
 
-// Clear the sheet of all old values
+// Clear the ios sheet of all old values
 $requests = [
     new Google_Service_Sheets_Request([
         'updateCells' => [
@@ -116,17 +145,46 @@ $requests = [
 $batchUpdateRequest = new Google_Service_Sheets_BatchUpdateSpreadsheetRequest([
     'requests' => $requests
 ]);
-$response = $service->spreadsheets->batchUpdate($spreadsheetId, $batchUpdateRequest);
 
+try {
+    $response = $service->spreadsheets->batchUpdate($spreadsheetId, $batchUpdateRequest);
+} catch (Exception $e) {
+    echo "Error deleting ios data:\n";
+    echo $e."\n";
+    echo "Retrying...\n";
+    sleep(30);
+    try {
+        $response = $service->spreadsheets->batchUpdate($spreadsheetId, $batchUpdateRequest);
+    } catch (Exception $e) {
+        "Failed.\n";
+        exit;
+    }
+}
+
+// Add the new ios values to the sheet
 $body = new Google_Service_Sheets_ValueRange([
     'values' => $new_ios_values
 ]);
 $params = [
     'valueInputOption' => 'USER_ENTERED'
 ];
-$result = $service->spreadsheets_values->update($spreadsheetId, $ios_update_range, $body, $params);
 
-// Clear the sheet of all old values
+try {
+    $response = $service->spreadsheets_values->update($spreadsheetId, $ios_update_range, $body, $params);
+} catch (Exception $e) {
+    echo "Error writing ios data:\n";
+    echo $e."\n";
+    echo "Retrying...\n";
+    sleep(30);
+    try {
+        $response = $service->spreadsheets_values->update($spreadsheetId, $ios_update_range, $body, $params);
+    } catch (Exception $e) {
+        "Failed.\n";
+        exit;
+    }
+}
+
+// Clear the web sheet of all values
 $requests = [
     new Google_Service_Sheets_Request([
         'updateCells' => [
@@ -140,16 +198,42 @@ $requests = [
 $batchUpdateRequest = new Google_Service_Sheets_BatchUpdateSpreadsheetRequest([
     'requests' => $requests
 ]);
-$response = $service->spreadsheets->batchUpdate($spreadsheetId, $batchUpdateRequest);
+try {
+    $response = $service->spreadsheets->batchUpdate($spreadsheetId, $batchUpdateRequest);
+} catch (Exception $e) {
+    echo "Error deleting web data:\n";
+    echo $e."\n";
+    echo "Retrying...\n";
+    sleep(30);
+    try {
+        $response = $service->spreadsheets->batchUpdate($spreadsheetId, $batchUpdateRequest);
+    } catch (Exception $e) {
+        "Failed.\n";
+        exit;
+    }
+}
 
+// Add the new web values to the sheet
 $body = new Google_Service_Sheets_ValueRange([
     'values' => $new_web_values
 ]);
 $params = [
     'valueInputOption' => 'USER_ENTERED'
 ];
-$result = $service->spreadsheets_values->update($spreadsheetId, $web_update_range, $body, $params);
-
+try {
+    $result = $service->spreadsheets_values->update($spreadsheetId, $web_update_range, $body, $params);
+} catch (Exception $e) {
+    echo "Error writing web data:\n";
+    echo $e."\n";
+    echo "Retrying...\n";
+    sleep(30);
+    try {
+        $result = $service->spreadsheets_values->update($spreadsheetId, $web_update_range, $body, $params);
+    } catch (Exception $e) {
+        "Failed.\n";
+        exit;
+    }
+}
 
 function generateDateTimes($time_start, $time_finish, $time_interval) {
     $datetimes = array();
