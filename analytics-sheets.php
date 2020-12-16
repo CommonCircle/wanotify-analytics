@@ -16,20 +16,27 @@ $client = new \Google_Client();
 $client->setApplicationName('WA Notify Updater');
 $client->setScopes([\Google_Service_Sheets::SPREADSHEETS]);
 $client->setAccessType('offline');
-$client->setAuthConfig(__DIR__ . '/enxsheets-credentials.json');
+try {
+    $client_credentials = __DIR__ . '/enxsheets-credentials.json';
+    $client->setAuthConfig($client_credentials);
+} catch (Exception $e) {
+    echo "Unable to open credentials file: $client_credentials\n";
+    echo "$e\n";
+    exit;
+}
 
 $service;
 try {
     $service = new Google_Service_Sheets($client);
 } catch (Exception $e) {
     echo "Error creating service:\n";
-    echo $e."\n";
+    echo "$e\n";
     echo "Retrying...\n";
     sleep(30);
     try {
         $service = new Google_Service_Sheets($client);
     } catch (Exception $e) {
-        "Failed.\n";
+        echo "Failed.\n";
         exit;
     }
 }
@@ -43,21 +50,29 @@ $installs_datetimes = generateDateTimes($installs_time_start, $time_finish, $tim
 $web_time_start = date_create_from_format("Y-m-d H:i:s", "2020-11-01 00:00:00");
 $web_datetimes = generateDateTimes($web_time_start, $time_finish, $time_interval);
 
-$strAnalyticsData = file_get_contents('./resource_stats_hourly.json');
-$jsondata = json_decode($strAnalyticsData, true);
 // prep data for entry
 $data_by_datetime = array();
 $install_data_fields = array();
 $web_data_fields = array();
-foreach ($jsondata as $d) {
-    $resource = str_replace("iOS installs ", "", $d['resource']);
-    $data_by_datetime[date_create_from_format('d/M/Y H', $d['time'])->format('Y-m-d H:i:s')][$resource] = $d;
-    if (substr($d['resource'],0,1) === "/") { // Web page/resource hit
-        $web_data_fields[$resource] = 0;
-    } else if ($resource != "HealthENBuddy") { // HealthENBuddy added to data_fields later
-        $install_data_fields[$resource] = 0;
+try {
+    $data_file = './resource_stats_hourly.json';
+    $strAnalyticsData = file_get_contents($data_file);
+    $jsondata = json_decode($strAnalyticsData, true);
+    foreach ($jsondata as $d) {
+        $resource = str_replace("iOS installs ", "", $d['resource']);
+        $data_by_datetime[date_create_from_format('d/M/Y H', $d['time'])->format('Y-m-d H:i:s')][$resource] = $d;
+        if (substr($d['resource'],0,1) === "/") { // Web page/resource hit
+            $web_data_fields[$resource] = 0;
+        } else if ($resource != "HealthENBuddy") { // HealthENBuddy added to data_fields later
+            $install_data_fields[$resource] = 0;
+        }
     }
+} catch (Exception $e) {
+    "Exception reading hourly data:\n";
+    echo "$e\n";
+    exit;
 }
+
 $install_data_fields = array_keys($install_data_fields);
 array_multisort($install_data_fields);
 array_unshift($install_data_fields, "HealthENBuddy");
@@ -93,14 +108,14 @@ try {
     $language_values = $response->getValues();
 } catch (Exception $e) {
     echo "Error getting languages:\n";
-    echo $e."\n";
+    echo "$e\n";
     echo "Retrying...\n";
     sleep(30);
     try {
         $response = $service->spreadsheets_values->get($spreadsheetId, $language_range);
         $language_values = $response->getValues();
     } catch (Exception $e) {
-        "Failed.\n";
+        echo "Failed.\n";
         exit;
     }
 }
@@ -156,7 +171,7 @@ try {
     try {
         $response = $service->spreadsheets->batchUpdate($spreadsheetId, $batchUpdateRequest);
     } catch (Exception $e) {
-        "Failed.\n";
+        echo "Failed.\n";
         exit;
     }
 }
@@ -179,7 +194,7 @@ try {
     try {
         $response = $service->spreadsheets_values->update($spreadsheetId, $ios_update_range, $body, $params);
     } catch (Exception $e) {
-        "Failed.\n";
+        echo "Failed.\n";
         exit;
     }
 }
@@ -208,7 +223,7 @@ try {
     try {
         $response = $service->spreadsheets->batchUpdate($spreadsheetId, $batchUpdateRequest);
     } catch (Exception $e) {
-        "Failed.\n";
+        echo "Failed.\n";
         exit;
     }
 }
@@ -230,7 +245,7 @@ try {
     try {
         $result = $service->spreadsheets_values->update($spreadsheetId, $web_update_range, $body, $params);
     } catch (Exception $e) {
-        "Failed.\n";
+        echo "Failed.\n";
         exit;
     }
 }
