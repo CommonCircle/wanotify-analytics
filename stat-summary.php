@@ -71,7 +71,7 @@ if ($diff < ($precision - $lt_threshold)) {
 $est = $est/(10**6);
 $est = $sign . $est;
 
-$to = "bryant.karras@doh.wa.gov, amy.reynolds@doh.wa.gov, dlorigan@uw.edu";
+$to = "bryant.karras@doh.wa.gov, amy.reynolds@doh.wa.gov, dlorigan@uw.edu, lober@uw.edu";
 $subject = "WA Notify Report - $time";
 $txt = '';
 $headers = "MIME-Version: 1.0\r\n";
