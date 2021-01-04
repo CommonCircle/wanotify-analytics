@@ -45,7 +45,7 @@ $log_files = array_merge($log_files, explode("\n", shell_exec("find $log_base_fo
 // $log_files = array("./ssl-test.log"); // test
 array_multisort($log_files);
 
-$timestamp = $end_date->format('Y-m-d');
+$timestamp = $end_date->format('Y-m-d H:i:s');
 $output_folder = "./analytics_output";
 if (!file_exists($output_folder)) {
     mkdir($output_folder, 0777, true);
