@@ -51,7 +51,7 @@ $install_data_fields = array();
 $web_data_fields = array();
 foreach ($jsondata as $d) {
     $resource = str_replace("iOS installs ", "", $d['resource']);
-    $data_by_datetime[date_create_from_format('d/M/Y H', $d['time'])->format('Y-m-d H:i:s')][$resource] = $d;
+    $data_by_datetime[date_create_from_format('Y-m-d H', $d['time'])->format('Y-m-d H:i:s')][$resource] = $d;
     if (substr($d['resource'],0,1) === "/") { // Web page/resource hit
         $web_data_fields[$resource] = 0;
     } else if ($resource != "HealthENBuddy") { // HealthENBuddy added to data_fields later

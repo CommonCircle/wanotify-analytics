@@ -17,15 +17,18 @@ $show = array(
 // "/robots.txt",
 );
 $by_user = array(
-    'iOS installs'
+    "iOS installs"
 );
 $start_date = date_create_from_format('Y-m-d', '2020-11-01');
-$end_date = date_create_from_format('Y-m-d', null);
+$end_date = new DateTime();
 $site_interval = 'daily';
 $resource_interval = 'hourly'; // daily or hourly
 
+$start_dt = new DateTime();
+echo "Start time: {$start_dt->format('Y-m-d H:i:s')}\n";
+
 $one_month = new DateInterval('P1M');
-$curr_date = $start_date;
+$curr_date = clone $start_date;
 $log_files = array();
 
 // find params
@@ -36,14 +39,13 @@ $search_string = "ssl-$domain"."_access*";
 // get access log archives
 while ($curr_date <= $end_date){
     $log_files = array_merge($log_files, explode("\n", shell_exec("find $log_base_folder/{$curr_date->format('Y')}/{$curr_date->format('m')} -maxdepth $max_depth -iname '$search_string'")));
-    $curr_date = $curr_date + $one_month;
+    $curr_date = $curr_date->add($one_month);
 }
 $log_files = array_merge($log_files, explode("\n", shell_exec("find $log_base_folder -maxdepth $max_depth -iname '$search_string'")));
 // $log_files = array("./ssl-test.log"); // test
 array_multisort($log_files);
 
-$dt = $end_date;
-$timestamp = $dt->format('Y-m-d');
+$timestamp = $end_date->format('Y-m-d');
 $output_folder = "./analytics_output";
 if (!file_exists($output_folder)) {
     mkdir($output_folder, 0777, true);
@@ -51,11 +53,6 @@ if (!file_exists($output_folder)) {
 $txt_out = "$output_folder/analytics_$timestamp.txt";
 $txt_handle = fopen($txt_out, 'w');
 echo "Text output: $txt_out\n";
-
-$astring = join("", $log_arr);
-$astring = preg_replace("/(\r|\t)/", "", $astring);
-$records = preg_split("/\n/", $astring, -1, PREG_SPLIT_NO_EMPTY);
-$sizerecs = sizeof($records);
 
 $resources = array();
 
@@ -86,8 +83,6 @@ $site_stats = array();
  */
 $resource_stats = array();
 
-$start_time = time();
-
 foreach ($log_files as $filename) {
     if ($filename) {
         echo "$filename\n";
@@ -115,7 +110,7 @@ foreach ($log_files as $filename) {
             preg_match("/\[(.+?)\]/", $content, $match);
             $access_time = $match[1] ?? "";
             if ($access_time) {
-                $datetime = date_create_from_format('d/M/Y H+', $access_time);
+                $datetime = date_create_from_format('d/M/Y:H+', $access_time);
             } else {
                 continue;
             }
@@ -168,10 +163,9 @@ foreach ($log_files as $filename) {
                 }
                 $content = str_replace($match[0], "", $content);
             }
-
-            if ((!$start_date || $start_date <= $datetime) && (!$end_date || $datetime <= $end_date)) {
-                
-                $datetime->setTime($datetime->format('H'), 0);
+            if ((!$start_date || $datetime >= $start_date) && (!$end_date || $datetime <= $end_date)) {
+                $date = $datetime->format('Y-m-d');
+                $hour = $datetime->format('H');
                 
                 $aliases = array($page);
                 if (isset($combine[$page])) {
@@ -201,7 +195,7 @@ foreach ($log_files as $filename) {
                     $site_stats[$date]['hits']++;
 
                     if (!$show || in_array($key, $show)) {
-                        if (array_key_exists($key, $by_user) && $user_agent) {
+                        if (in_array($key, $by_user) && $user_agent) {
                             $key .= " $user_agent";
                         }
                         $time_key = $date;
@@ -304,7 +298,7 @@ foreach($resources as $page => $dates) {
 
 //===============================================
 
-$end_dt = new DateTime('now', new DateTimeZone($tz));
+$end_dt = new DateTime();
 echo "End time: {$end_dt->format('Y-m-d H:i:s')}\n";
 fclose($txt_handle);
 fclose($site_handle);
