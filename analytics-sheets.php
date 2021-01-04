@@ -235,6 +235,30 @@ try {
     }
 }
 
+// Update sheet iOS timestamp
+$now_dt = new DateTime();
+$timestamp_update_range = "Summary!B1";
+$body = new Google_Service_Sheets_ValueRange([
+    'values' => array(array($now_dt->format('Y-m-d H:i:s')))
+]);
+$params = [
+	'valueInputOption' => 'USER_ENTERED'
+];
+try {
+	$result = $service->spreadsheets_values->update($spreadsheetId, $timestamp_update_range, $body, $params);
+} catch (Exception $e) {
+	echo "Error writing timestamp:\n";
+	echo $e."\n";
+	echo "Retrying...\n";
+	sleep(30);
+	try {
+		$result = $service->spreadsheets_values->update($spreadsheetId, $timestamp_update_range, $body, $params);
+	} catch (Exception $e) {
+		"Failed.\n";
+		exit;
+	}
+}
+
 function generateDateTimes($time_start, $time_finish, $time_interval) {
     $datetimes = array();
     $datetime = $time_start;

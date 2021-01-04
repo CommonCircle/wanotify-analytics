@@ -71,6 +71,7 @@ $est = $est/(10**6);
 $est = $sign . $est;
 
 $to = "bryant.karras@doh.wa.gov, amy.reynolds@doh.wa.gov, dlorigan@uw.edu, lober@uw.edu, jbaseman@uw.edu";
+//$to = "dlorigan@uw.edu";
 $subject = "WA Notify Report - $time";
 $txt = '';
 $headers = "MIME-Version: 1.0\r\n";
@@ -90,7 +91,7 @@ $message = "
 <tr><th style='text-align:left'>Android Users</th><td style='text-align:right'>".number_format($android)."</td></tr>
 </table>
 <br>
-<p><a link='https://docs.google.com/spreadsheets/d/$spreadsheet_id'>Go To Detailed Statistics</a></p>
+<p>Detailed Statistics:<br>https://docs.google.com/spreadsheets/d/$spreadsheet_id</p>
 </body>
 </html>
 ";
