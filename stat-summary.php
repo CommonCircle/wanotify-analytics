@@ -1,14 +1,15 @@
 <?php
 
 require __DIR__ . '/vendor/autoload.php';
+require __DIR__ . '/recipientList.php';
 
 $tz = 'US/Pacific';
 $dt = new DateTime('now', new DateTimeZone($tz));
 $time = $dt->format('m/d/Y');
 
-$spreadsheet_id = '13cBp0oCkmeABBWDbySnwTF2Nr3Eqz38baqrTOK-Yqu0';
-$sheet_name = "Summary";
-$range = "B6:B8"; // summary totals
+$spreadsheet_id = '1DQyZUBLnlshJx6ptFxKusl7KUUN8j-I2zWCNH-3ULGU';
+$sheet_name = "'Summary Data'";
+$range = "A1:B18"; // summary totals
 $get_range = $sheet_name . "!" . $range;
 
 $client = new \Google_Client();
@@ -33,10 +34,10 @@ try {
     }
 }
 
-$values;
+$sheet_values;
 try {
     $response = $service->spreadsheets_values->get($spreadsheet_id, $get_range);
-    $values = $response->getValues();
+    $sheet_values = $response->getValues();
 } catch (Exception $e) {
     echo "Error connecting to service:\n";
     echo $e."\n";
@@ -44,16 +45,24 @@ try {
     sleep(30);
     try {
         $response = $service->spreadsheets_values->get($spreadsheet_id, $get_range);
-        $values = $response->getValues();
+        $sheet_values = $response->getValues();
     } catch (Exception $e) {
         "Failed.\n";
         exit;
     }
 }
-//var_dump($values);
-$ios = $values[0][0];
-$android = $values[1][0];
-$total = $values[2][0];
+
+$values = array();
+foreach ($sheet_values as $row) {
+    if (sizeof($row) == 2) {
+        $values[$row[0]] = $row[1];
+    }
+}
+
+$ios = $values["Total iOS Activations"];
+$android = $values["Total Android Activations"];
+$total = $values["Total Activations"];
+$smartphone_rate = $values["Rate in smartphone owners"];
 
 $precision = 10000;
 $lt_threshold = 4500;
@@ -70,8 +79,6 @@ if ($diff < ($precision - $lt_threshold)) {
 $est = $est/(10**6);
 $est = $sign . $est;
 
-$to = "bryant.karras@doh.wa.gov, amy.reynolds@doh.wa.gov, dlorigan@uw.edu, lober@uw.edu, jbaseman@uw.edu";
-//$to = "dlorigan@uw.edu";
 $subject = "WA Notify Report - $time";
 $txt = '';
 $headers = "MIME-Version: 1.0\r\n";
@@ -83,12 +90,14 @@ $message = "
 <title>WA Notify Summary, $time</title>
 </head>
 <body>
-<p>WA Notify user counts as of {$dt->format('m/d/Y H:i')}</p>
+<p>WA Notify user counts:</p>
 <table>
+<tr><th style='text-align:left'>Date/Time</th><td style='text-align:right'>{$dt->format('m/d/Y H:i')}</td></tr>
 <tr><th style='text-align:left'>Estimate</th><td style='text-align:right'>$est million</td></tr>
 <tr><th style='text-align:left'>Total Users</th><td style='text-align:right'>".number_format($total)."</td></tr>
 <tr><th style='text-align:left'>iOS Users</th><td style='text-align:right'>".number_format($ios)."</td></tr>
 <tr><th style='text-align:left'>Android Users</th><td style='text-align:right'>".number_format($android)."</td></tr>
+<tr><th style='text-align:left'>Rate in smartphone owners</th><td style='text-align:right'>".$smartphone_rate."</td></tr>
 </table>
 <br>
 <p>Detailed Statistics:<br>https://docs.google.com/spreadsheets/d/$spreadsheet_id</p>
@@ -96,5 +105,5 @@ $message = "
 </html>
 ";
 
-mail($to, $subject, $message, $headers);
+mail($recipientList, $subject, $message, $headers);
 ?>
