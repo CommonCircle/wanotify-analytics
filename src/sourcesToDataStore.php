@@ -1,7 +1,7 @@
 <?php
 
-$config = include(__DIR__ . '/cfg/importer_config.php');
-$pdo = include(__DIR__ . '/cfg/database_config.php');
+$config = include __DIR__ . '/Configuration/importer_config.php';
+$pdo = include __DIR__ . '/Configuration/database_config.php';
 
 foreach ($config->sources as $type => $values) {
     // Read data source configuration
