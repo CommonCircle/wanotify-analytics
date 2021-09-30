@@ -1,7 +1,7 @@
 <?php
 
-$config = include(__DIR__ . '/config.php');
-$pdo = include(__DIR__ . '/database.php');
+$config = include(__DIR__ . '/cfg/exporter_config.php');
+$pdo = include(__DIR__ . '/cfg/database_config.php');
 
 require_once VENDOR_DIR . '/autoload.php';
 

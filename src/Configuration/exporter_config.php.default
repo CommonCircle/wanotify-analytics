@@ -1,0 +1,39 @@
+<?php
+include __DIR__ . '/common_config.php';
+include __DIR__ . '/exporter_config_secrets.php';
+
+return (object) array(
+    // Destinations
+    // ============================================================================================
+    // Google Sheets
+    // ==============================================
+
+    /**
+     * sheet_name = the name of the sheet (tab) to update with this dataset
+     * start_time = ISO datetime of the earliest data to upload to sheet
+     * data_type = data type suffix of exporter class to use
+     * data_interval = interval of data to upload to sheet (must be one of the available intervals for this data type, e.g. 'hourly', 'daily', etc.)
+     */
+    'sheets' => array(
+        // path to service account credential file
+        'credentials_file' => $sheets_cred_file,
+
+        // guid of the spreadsheet
+        'spreadsheet_id' => $data_layer_spreadsheet_id,
+
+        // sheet export configuration structure
+        'optional name for config' => array(
+            // name of sheet in spreadsheet to write to
+            'sheet_name' => '',
+
+            // earliest data to export
+            'start_time' => '1999-12-25 0:00:00',
+
+            // exporter/importer data type suffix to use, eg 'iOS'
+            'data_type' => '',
+
+            // interval to export
+            'data_interval' => 'hourly',
+        ),
+    ),
+);

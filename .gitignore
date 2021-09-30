@@ -1,3 +1,11 @@
 analytics_output/*
 vendor/*
 inputs/*
+archive/*
+src/logs/*
+recipientList.php
+*stats*.json
+*credentials.json
+*.csv
+*secrets.php
+*/Configuration/*.php
