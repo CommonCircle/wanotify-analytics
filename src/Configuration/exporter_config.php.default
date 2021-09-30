@@ -1,6 +1,6 @@
 <?php
 include __DIR__ . '/common_config.php';
-include __DIR__ . '/exporter_config_secrets.php';
+// include __DIR__ . '/exporter_config_secrets.php';
 
 return (object) array(
     // Destinations
@@ -16,10 +16,10 @@ return (object) array(
      */
     'sheets' => array(
         // path to service account credential file
-        'credentials_file' => $sheets_cred_file,
+        'credentials_file' => $sheets_credential_file,
 
         // guid of the spreadsheet
-        'spreadsheet_id' => $data_layer_spreadsheet_id,
+        'spreadsheet_id' => $spreadsheet_id,
 
         // sheet export configuration structure
         'optional name for config' => array(

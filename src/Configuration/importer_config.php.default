@@ -1,0 +1,36 @@
+<?php
+include __DIR__ . 'common_config.php';
+// include __DIR__ . 'importer_config_secrets.php';
+
+return (object) array(
+    // Sources
+    // ============================================================================================
+    // URL endpoints
+    // ==============================================
+    
+    // array of importer configurations
+    'sources' => array(
+        // via cURL:
+        'ImporterDataTypeToUse1' => array(
+            // url to cURL for data
+            'location' => '',
+
+            // optional auth header to use
+            'auth_type' => '',
+
+            // optional auth value to use
+            'auth_value' => '',
+        ),
+        // via Sheets:
+        'ImporterDataTypeToUse2' => array(
+            'location' => array(
+                // id of spreadsheet to access
+                'spreadsheet_id' => $spreadsheet_id,
+                // name of sheet to write
+                'sheet_name' => '',
+            ),
+            'auth_type' => 'GoogleSheetsJWT',
+            'auth_value' => $sheets_credential_file,
+        ),
+    ),
+);

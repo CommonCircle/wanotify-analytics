@@ -10,5 +10,5 @@ define('UTIL_DIR', APP_DIR . '/Utils');
 
 define('VENDOR_DIR', BASE_DIR . '/vendor');
 
-$data_layer_spreadsheet_id = '';
-$sheets_cred_file = 'path/to/sheet/credentials.json';
+$spreadsheet_id = '';
+$sheets_credential_file = 'path/to/sheet/credentials.json';
