@@ -46,23 +46,31 @@ class DataStoreModel_iOS extends DataStoreModel {
         '%E0%B8%81%E0%B8%B2%E0%B8%A3%E0%B8%95%E0%B8%B1%E0%B9%89%E0%B8%87%E0%B8%84%E0%B9%88%E0%B8%B2' => 'Thai_Settings',
     );
 
+    private $iosFirstDayRetentionRate = .80;
+    private $iosRetentionRate = .75;
+
     public function __construct($pdo) {
         parent::__construct($pdo);
     }
 
     // Synthetic fields added here
-    protected function prepareData(DatedData $data) : DatedData {
-        $datedData = $data->getData();
-        foreach ($datedData as $date => $d) {
-            // $d = $this->renameFields($d);
-            $data->setData($date, $d);
+    protected function prepareData(DatedData $datedData) : DatedData {
+        $dd = $datedData->getData();
+        foreach ($dd as $date => $data) {
+            // $d = $this->renameFields($d);            
+            $rate = ($date < '2020-12-01' ? $this->iosFirstDayRetentionRate : $this->iosRetentionRate);
+            $data['Settings_Adjusted'] = ($data['Settings Total'] ?? 0) * $rate;
+            $data['HealthENBuddy_Adjusted'] = ($data['HealthENBuddy'] ?? 0) * $rate;
+            $data['ENBuddy_Adjusted'] = ($data['ENBuddy'] ?? 0) * $rate;
+            $data['Total_Adjusted'] = $data['Settings_Adjusted'] + $data['HealthENBuddy_Adjusted'] + $data['ENBuddy_Adjusted'];
+            $datedData->setData($date, $data);
         }
-        return $data;
+        return $datedData;
     }
 
     private function renameFields(DatedData $datedData) {
         $dd = $datedData->getData();
-        foreach ($dd as $date => $data) {
+        foreach($dd as $date => $data) {
             $rekeyedData = array();
             foreach ($data as $k => $d) {
                 $rekeyedData[$this->fieldNameMap[$k] ?? $k] = $d;

@@ -14,11 +14,13 @@ class DataStoreModel_ENCVKeys extends DataStoreModel {
     }
 
     // Synthetic fields added here
-    protected function prepareData(DatedData $data) : DatedData {
-        $datedData = $data->getData();
-        foreach ($datedData as $date => $d) {
-            $data->setData($date, $d);
+    protected function prepareData(DatedData $datedData) : DatedData {
+        $dd = $datedData->getData();
+        foreach($dd as $date => $data) {
+            $data['Total_Publish_Requests'] = $data['publish_requests_android'] + $data['publish_requests_ios'] + $data['publish_requests_unknown'];
+
+            $datedData->setData($date, $data);
         }
-        return $data;
+        return $datedData;
     }
 }

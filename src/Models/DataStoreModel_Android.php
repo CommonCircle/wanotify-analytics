@@ -15,11 +15,14 @@ class DataStoreModel_Android extends DataStoreModel {
     }
 
     // Synthetic fields added here
-    protected function prepareData(DatedData $data) : DatedData {
-        $datedData = $data->getData();
-        foreach ($datedData as $date => $d) {
-            $data->setData($date, $d);
+    protected function prepareData(DatedData $datedData) : DatedData {
+        $dd = $datedData->getData();
+        foreach($dd as $date => $data) {
+            $data['Net_Activations'] =
+                $data['Device acquisition (All devices, All events, Per interval, Hourly): United States'] ?? 0 +
+                $data['Device loss (All devices, All events, Per interval, Hourly): United States'] ?? 0;
+            $datedData->setData($date, $data);
         }
-        return $data;
+        return $datedData;
     }
 }

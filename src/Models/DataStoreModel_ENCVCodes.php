@@ -14,11 +14,14 @@ class DataStoreModel_ENCVCodes extends DataStoreModel {
     }
 
     // Synthetic fields added here
-    protected function prepareData(DatedData $data) : DatedData {
-        $datedData = $data->getData();
-        foreach ($datedData as $date => $d) {
-            $data->setData($date, $d);
+    protected function prepareData(DatedData $datedData) : DatedData {
+        $dd = $datedData->getData();
+        foreach($dd as $date => $data) {
+            $data['Codes_Claimed_per_Issued'] = $data['codes_claimed'] / $data['codes_issued'];
+            $data['Tokens_Claimed_per_Code_Claimed'] = $data['tokens_claimed'] / $data['codes_claimed'];
+            
+            $datedData->setData($date, $data);
         }
-        return $data;
+        return $datedData;
     }
 }
