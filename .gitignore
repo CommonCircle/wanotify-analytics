@@ -3,6 +3,7 @@ vendor/*
 inputs/*
 archive/*
 src/logs/*
+src/Outputs/*
 recipientList.php
 *stats*.json
 *credentials.json
