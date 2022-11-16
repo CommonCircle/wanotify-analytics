@@ -8,7 +8,9 @@
     },
     "extra": {
         "google/apiclient-services": [
-            "Sheets"
+            "Sheets",
+            "Drive",
+            "Storage"
         ]
     }
 }

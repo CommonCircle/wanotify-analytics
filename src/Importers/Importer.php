@@ -27,7 +27,6 @@ abstract class Importer {
     // Get the data from the source and send it to the model
     public function import() {
         $currentDatedData = $this->getCurrentDatedData();
-        // TODO handle errors getting data
 
         $this->model->save($currentDatedData);
         // TODO handle errors upserting data

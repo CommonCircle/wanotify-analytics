@@ -13,27 +13,26 @@ class Importer_ENCVAPI extends Importer_ENCVStatsAPI {
     protected function processData($data) : DatedData {
         $dataArray = $data['statistics'];
         
-        $dates = array_column($dataArray, 'date');
-        $minDateTime = $this->convertDate($this->ENCVDateTimeFormat, min($dates));
-        $maxDateTime = $this->convertDate($this->ENCVDateTimeFormat, max($dates));
+        // $dates = array_column($dataArray, 'date');
+        // $minDateTime = $this->convertDate($this->sourceDateTimeFormat, min($dates));
+        // $maxDateTime = $this->convertDate($this->sourceDateTimeFormat, max($dates));
         
-        $currentData = $this->model->selectDataIntervalByDate('daily', $minDateTime, $maxDateTime);
-        $currentDataByDate = array_column($currentData, 'data', 'date');
+        // // Add new API key data to existing table
+        // $currentAPIData = $this->model->selectDataByIntervalAndRange('daily', $minDateTime, $maxDateTime);
+        // $currentDataByDate = array_column($currentAPIData, 'data', 'date');
         
         $processedDataByDate = array();
         foreach ($dataArray as $d) {
-            $date = $this->convertDate($this->ENCVDateTimeFormat, $d['date']);
+            $date = $this->convertDate($this->sourceDateTimeFormat, $d['date']);
             $newData = array($data['authorized_app_name'] => $d['data']['codes_issued']);
-            $updatedData = array_merge($currentDataByDate[$date] ?? array(), $newData);
-            if (array_sum($updatedData) || $date == date_create()->format($this->dbDateTimeFormat)) {
-                $processedDataByDate[$date] = $updatedData;
+            // $updatedData = array_merge($currentDataByDate[$date] ?? array(), $newData);
+            if (array_sum($newData) || $date == date_create()->format($this->dbDateTimeFormat)) {
+                $processedDataByDate[$date] = $newData;
             }
         }
 
-        $processedData = new DatedData();
-        foreach ($processedDataByDate as $date => $data) {
-            $processedData->setData($date, $data);
-        }
+        $processedData = new DatedData($processedDataByDate);
         return $processedData;
     }
+
 }

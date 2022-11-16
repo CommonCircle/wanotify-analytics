@@ -3,21 +3,25 @@
 class DatedData {
     private $data;
 
-    public function __construct() {
-        $this->data = array();
+    public function __construct($data=array()) {
+        $this->setDataArray($data);
     }
 
-    public function setData($date, $data) {
-        $success = true;
-        
-        $date = $this->validateDate($date);
-        
-        if ($date) {
-            $this->data[$date] = $data;
-        } else {
-            $success = false;
+    public function addData($date, $data) {
+        if ($date instanceof DateTime) {
+            $date = $date->format('Y-m-d H:i:s');
         }
-        return $success;
+        $date = $this->validateDate($date);
+        $this->data[$date] = $data;
+        return;
+    }
+
+    public function setDataArray($dataArray) {
+        $this->data = array();
+        foreach ($dataArray as $date => $data) {
+            $this->addData($date, $data);
+        }
+        return;
     }
 
     public function getData() {
@@ -28,12 +32,20 @@ class DatedData {
         return array_map('json_encode', $this->data);
     }
 
+    public function merge(DatedData $dataToMerge) {
+        foreach ($dataToMerge->getData() as $date => $newData) {
+            $updatedData = array_merge($this->data[$date] ?? [], $newData);
+            $this->addData($date, $updatedData);
+        }
+        return $this;
+    }
+
     private function validateDate($date) {
         $dt = new DateTime($date);
         if (checkdate($dt->format('m'), $dt->format('d'), $dt->format('Y'))) {
             $date = $dt->format('Y-m-d H:i:s');
         } else {
-            return false;
+            throw new Exception("Invalid date $date");
         }
         return $date;
     }

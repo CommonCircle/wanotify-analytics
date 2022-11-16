@@ -37,15 +37,15 @@ class Importer_GoogleSheets extends Importer {
         }
 
         try {
-            $response = $service->spreadsheets_values->get($this->sheetsInfo['spreadsheet_id'], $this->sheetsInfo['sheet_name'] . '!A1:BZ');
+            $response = $service->spreadsheets_values->get($this->sheetsInfo['spreadsheet_id'], $this->sheetsInfo['sheet_name']);
             $contents = $response->getValues();
         } catch (Exception $e) {
-            echo "Error getting current $dataTypeSuffix values:\n";
-            echo $e."\n";
-            echo "Retrying...\n";
+            // echo "Error getting current {$this->sheetsInfo['sheet_name']} values:\n";
+            // echo $e."\n";
+            // echo "Retrying...\n";
             sleep(20);
             try {
-                $response = $service->spreadsheets_values->get($spreadsheetId, $headerRange);
+                $response = $service->spreadsheets_values->get($this->sheetsInfo['spreadsheet_id'], $this->sheetsInfo['sheet_name']);
                 $contents = $response->getValues();
             } catch (Exception $e) {
                 echo("Failed.\n$e\n");
@@ -70,6 +70,7 @@ class Importer_GoogleSheets extends Importer {
         $fieldNames = array_shift($dataArray);
         // var_dump($fieldNames);
         // exit;
+        $date_column = $fieldNames[0];
         $processedDataByDate = array();
         foreach ($dataArray as $d) {
             // Remove extra appended columns
@@ -79,8 +80,8 @@ class Importer_GoogleSheets extends Importer {
             // Remove empty internal columns from row
             $keyedData = array_filter(array_combine(array_slice($fieldNames,0,count($d)), $d), function ($a) { return $a !== ""; });
 
-            $date = $keyedData['Date Time'];
-            unset($keyedData['Date Time']);
+            $date = $keyedData[$date_column];
+            unset($keyedData[$date_column]);
             if (!empty($keyedData)) {
                 $processedDataByDate[$date] = $keyedData;
             }
@@ -88,7 +89,7 @@ class Importer_GoogleSheets extends Importer {
 
         $processedData = new DatedData();
         foreach ($processedDataByDate as $date => $data) {
-            $processedData->setData($date, $data);
+            $processedData->addData($date, $data);
         }
         return $processedData;
     }

@@ -24,7 +24,7 @@ try {
 
 $spreadsheetId = $config->spreadsheet_id;
 
-foreach ($config->sheets as $name => $values) {
+foreach ($config->sheets as $name => $values) { // TODO Support multiple sheets
     // Read configuration for this destination
     $dataTypeSuffix = $values['data_type'];
     $startTime = $values['start_time'];
@@ -32,6 +32,7 @@ foreach ($config->sheets as $name => $values) {
     $sheetName = $values['sheet_name'];
     $headerRange = $sheetName . "!A1:1";
     $dataRange = $sheetName;
+    $sheetHeader = null;
 
     // Load exporter class file
     $exporterClassName = "Exporter_GoogleSheets_$dataTypeSuffix";
@@ -45,22 +46,28 @@ foreach ($config->sheets as $name => $values) {
     // Get sheet's current header row
     try {
         $response = $service->spreadsheets_values->get($spreadsheetId, $headerRange);
-        $sheetHeader = $response->getValues()[0];
+        $values = $response->getValues();
+        if ($values) {
+            $sheetHeader = $values[0];
+        }
     } catch (Exception $e) {
-        echo "Error getting current $dataTypeSuffix values:\n";
-        echo $e."\n";
-        echo "Retrying...\n";
+        // echo "Error getting current $dataTypeSuffix values:\n";
+        // echo $e."\n";
+        // echo "Retrying...\n";
         sleep(20);
         try {
             $response = $service->spreadsheets_values->get($spreadsheetId, $headerRange);
-            $sheetHeader = $response->getValues()[0];
+            $values = $response->getValues();
+            if ($values) {
+                $sheetHeader = $values[0];
+            }
         } catch (Exception $e) {
-            echo("Failed.\n$e\n");
+            echo("Failed to get current data:\n$e\n");
             continue;
         }
     }
     
-    if ($sheetHeader) {
+    if ($sheetHeader!==null) {
         // Add new fields to end of existing series to maintain order in sheet
         $fields = array_unique(array_merge($sheetHeader, $fields));
     }
@@ -89,11 +96,11 @@ foreach ($config->sheets as $name => $values) {
     try {
         $response = $service->spreadsheets_values->update($spreadsheetId, $dataRange, $body, $params);
     } catch (Exception $e) {
-        echo "Error writing data\n SPREADSHEET_ID: $spreadsheetId\n RANGE: $dataRange\n";
-        echo $e."\n";
-        echo "Retrying...\n";
-        sleep(30);
-        try {
+        // echo "Error writing data\n SPREADSHEET_ID: $spreadsheetId\n RANGE: $dataRange\n";
+        // echo $e."\n";
+        // echo "Retrying...\n";
+        sleep(60);
+        try {    
             $response = $service->spreadsheets_values->update($spreadsheetId, $dataRange, $body, $params);
         } catch (Exception $e) {
             echo "Failed.\n$e\n";

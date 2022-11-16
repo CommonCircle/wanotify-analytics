@@ -14,10 +14,32 @@ $show = array(
 "/next-steps-text",
 "/next-steps-text-sp",
 "/next-steps-count-30",
+"/next-steps-count-sr",
+"/next-steps-count-advisory",
+"/next-steps-count-7.30",
+"/next-steps-count-30.120",
+"/next-steps-count-2.8",
+"/next-steps-count-8.24",
 // "/next-steps",
 // "/uw-next-steps",
 // "/wanotify-ios-install.mobileconfig",
 // "/robots.txt",
+"/ExposureNotification/exposure/",
+"/ExposureNotification/exposure/en",
+"/ExposureNotification/exposure/es",
+"/ExposureNotification/exposure/zh-cn",
+"/ExposureNotification/exposure/ja",
+"/ExposureNotification/exposure/zh-hk",
+"/ExposureNotification/exposure/ko",
+"/ExposureNotification/exposure/vi",
+"/ExposureNotification/exposure/ru",
+"/ExposureNotification/exposure/fr",
+"/ExposureNotification/exposure/ar",
+"/ExposureNotification/exposure/de",
+"/ExposureNotification/exposure/so",
+"/ExposureNotification/exposure/tl",
+"/ExposureNotification/exposure/tr",
+"/ExposureNotification/exposure/uk",
 );
 
 // subset of shown resources to bin by user agent
@@ -25,6 +47,41 @@ $by_user = array(
     "iOS installs",
     "/next-steps-count",
     "/next-steps-count-30",
+    "/next-steps-count-sr",
+    "/next-steps-count-advisory",
+    "/next-steps-count-7.30",
+    "/next-steps-count-30.120",
+    "/next-steps-count-2.8",
+    "/next-steps-count-8.24",
+    "/ExposureNotification/exposure/",
+    "/ExposureNotification/exposure/en",
+    "/ExposureNotification/exposure/es",
+    "/ExposureNotification/exposure/zh-cn",
+    "/ExposureNotification/exposure/ja",
+    "/ExposureNotification/exposure/zh-hk",
+    "/ExposureNotification/exposure/ko",
+    "/ExposureNotification/exposure/vi",
+    "/ExposureNotification/exposure/ru",
+    "/ExposureNotification/exposure/fr",
+    "/ExposureNotification/exposure/ar",
+    "/ExposureNotification/exposure/am",
+    "/ExposureNotification/exposure/my",
+    "/ExposureNotification/exposure/fa",
+    "/ExposureNotification/exposure/de",
+    "/ExposureNotification/exposure/hi",
+    "/ExposureNotification/exposure/km",
+    "/ExposureNotification/exposure/pt",
+    "/ExposureNotification/exposure/pa",
+    "/ExposureNotification/exposure/ro",
+    "/ExposureNotification/exposure/so",
+    "/ExposureNotification/exposure/sw",
+    "/ExposureNotification/exposure/tl",
+    "/ExposureNotification/exposure/ta",
+    "/ExposureNotification/exposure/th",
+    "/ExposureNotification/exposure/tr",
+    "/ExposureNotification/exposure/uk",
+    "/ExposureNotification/exposure/ur",
+    "/ExposureNotification/exposure/next-steps",
 );
 $log_output = false;
 
@@ -105,7 +162,7 @@ foreach ($log_files as $filename) {
         echo "$filename\n";
         $isgz = strpos($filename, ".gz") !==false;
         $handle;
-        $content;
+	$content;
         if ($isgz) {
             $handle = gzopen($filename, "r");
             $content = gzgets($handle, 4096);
@@ -120,7 +177,12 @@ foreach ($log_files as $filename) {
             // IP address
             preg_match("/([0-9]+\.[0-9]+\.[0-9]+\.[0-9]+) - - /", $content, $match); // '123.123.123.123 - - '
             $ip = $match[1] ?? "";
-            $content = str_replace($match[0], "", $content);
+            if (array_key_exists(0, $match)) {
+                $content = str_replace($match[0], "", $content);
+            } else {
+                $content = $isgz ? gzgets($handle, 4096) : fgets($handle, 4096);
+                continue;
+            }
             
             // fwrite($txt_handle, "$content\n");
             // timestamp
@@ -128,7 +190,8 @@ foreach ($log_files as $filename) {
             $access_time = $match[1] ?? "";
             if ($access_time) {
                 $datetime = date_create_from_format('d/M/Y:H+', $access_time);
-            } else {
+	        } else {
+		        $content = $isgz ? gzgets($handle, 4096) : fgets($handle, 4096);
                 continue;
             }
             // preg_match("/(\d{2})\/([A-Za-z]{3})\/(\d{4})/", $access_time, $date_match); // '19/Oct/2020'
@@ -144,20 +207,32 @@ foreach ($log_files as $filename) {
             $parts = explode(" ", $http);
             $url = $parts[0];
             $page = page_basename($url);
-            $content = str_replace($match[0], "", $content);
+            if (array_key_exists(0, $match)) {
+                $content = str_replace($match[0], "", $content);
+            } else {
+                $content = $isgz ? gzgets($handle, 4096) : fgets($handle, 4096);
+                continue;
+            }
             
             // fwrite($txt_handle, "$content\n");
             // status code
             preg_match("/([0-9]{3})/", $content, $match);
             $status_code = $match[1] ?? "";
-            $content = str_replace($match[0], "", $content);
+            if (array_key_exists(0, $match)) {
+                $content = str_replace($match[0], "", $content);
+            } else {
+                $content = $isgz ? gzgets($handle, 4096) : fgets($handle, 4096);
+                continue;
+            }
             
             // fwrite($txt_handle, "$content\n");
             // referring url
             preg_match("/\"([^\"]+)\"/", $content, $match);
             $ref = $match[1] ?? "";
-            $content = str_replace($match[0], "", $content);
-            
+            if (array_key_exists(0, $match)) {
+                    $content = str_replace($match[0], "", $content);
+            }
+
             // fwrite($txt_handle, "$content\n");
             // browser
             preg_match("/\"([^\"]+)\"/", $content, $match);
@@ -168,7 +243,9 @@ foreach ($log_files as $filename) {
                 if (!$user_agent) {
                     $debug = true;
                 }
-                $content = str_replace($match[0], "", $content);
+                if (array_key_exists(0, $match)) {
+                    $content = str_replace($match[0], "", $content);
+                }
             }
             
             // fwrite($txt_handle, "$content\n");
@@ -180,7 +257,9 @@ foreach ($log_files as $filename) {
                 if (isset($match[1]) && $match[1] != "-") {
                     $bytes = $match[1];
                 }
-                $content = str_replace($match[0], "", $content);
+                if (array_key_exists(0, $match)) {
+                    $content = str_replace($match[0], "", $content);
+		        }
             }
             if ((!$start_date || $datetime >= $start_date) && (!$end_date || $datetime <= $end_date)) {
                 $date = $datetime->format('Y-m-d');
@@ -266,11 +345,7 @@ foreach ($log_files as $filename) {
                 fwrite($txt_handle, "Row: i\n$content\nIP: $ip\nTime: $access_time\nPage: $page\nType: link[1]\nCode: $status_code\nBytes: $bytes\nRef: $ref\nBrowser: $browser");
             }
 
-            if ($isgz) {
-                $content = gzgets($handle, 4096);
-            } else {
-                $content = fgets($handle, 4096);
-            }
+            $content = $isgz ? gzgets($handle, 4096) : fgets($handle, 4096);
         }
         
         if ($isgz) {

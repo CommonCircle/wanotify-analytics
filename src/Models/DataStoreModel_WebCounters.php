@@ -14,14 +14,23 @@ class DataStoreModel_WebCounters extends DataStoreModel {
         parent::__construct($pdo);
     }
 
-    // Synthetic fields added here
-    protected function prepareData(DatedData $datedData) : DatedData {
-        $dd = $datedData->getData();
-        foreach($dd as $date => $data) {
-            $data['Total_EN_Page_Hits'] = ($data['/next-steps-count Mozilla'] ?? 0) + ($data['/next-steps-count-30 Mozilla'] ?? 0);
-            $data['Total_Text_Page_Hits'] = ($data['/next-steps-text'] ?? 0) + ($data['/next-steps-text-sp'] ?? 0);
-            $datedData->setData($date, $data);
-        }
-        return $datedData;
+    /**
+     * Override parent class function
+     */
+    protected function calculateSumFields($data) {
+        $data['Total_EN_Page_Hits'] = 
+            // Configuration pages pre-5/2/22
+            ($data['/next-steps-count Mozilla'] ?? 0) 
+            + ($data['/next-steps-count-30 Mozilla'] ?? 0) 
+            + ($data['/next-steps-count-sr Mozilla'] ?? 0) 
+            + ($data['/next-steps-count-advisory Mozilla'] ?? 0)
+            // Configuration pages post-5/2/22
+            + ($data['/next-steps-count-7.30 Mozilla'] ?? 0)
+            + ($data['/next-steps-count-30.120 Mozilla'] ?? 0)
+            + ($data['/next-steps-count-2.8 Mozilla'] ?? 0)
+            + ($data['/next-steps-count-8.24 Mozilla'] ?? 0);
+
+        $data['Total_Text_Page_Hits'] = ($data['/next-steps-text'] ?? 0) + ($data['/next-steps-text-sp'] ?? 0);
+        return $data;
     }
 }

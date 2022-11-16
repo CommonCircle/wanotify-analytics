@@ -14,7 +14,7 @@ class Importer_ENCVKeys extends Importer_ENCVStatsAPI {
         $dataArray = $data;
         $processedDataByDate = array();
         foreach ($dataArray as $d) {
-            $date = $this->convertDate($this->ENCVDateTimeFormat, $d['day']);
+            $date = $this->convertDate($this->sourceDateTimeFormat, $d['day']);
             foreach ($d as $field => $value) {
                 if ($field != 'day') {
                     if (is_array($value)) {
@@ -32,7 +32,7 @@ class Importer_ENCVKeys extends Importer_ENCVStatsAPI {
 
         $processedData = new DatedData();
         foreach ($processedDataByDate as $date => $data) {
-            $processedData->setData($date, $data);
+            $processedData->addData($date, $data);
         }
         return $processedData;
     }

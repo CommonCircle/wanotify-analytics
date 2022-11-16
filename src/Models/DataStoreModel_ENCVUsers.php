@@ -13,14 +13,27 @@ class DataStoreModel_ENCVUsers extends DataStoreModel {
         parent::__construct($pdo);
     }
 
-    // Synthetic fields added here
-    protected function prepareData(DatedData $datedData) : DatedData {
-        $dd = $datedData->getData();
-        foreach($dd as $date => $data) {
-            $data['Total_User_Issuance'] = array_sum($data);
-            
-            $datedData->setData($date, $data);
+    /**
+     * Override parent class function
+     */
+    protected function calculateSumFields($data) {
+        $data['Max_User_Issuance'] = 0;
+        $data['Total_User_Issuance'] = 0;
+        
+        $max_issuance = max($data);
+        $total_issuance = array_sum($data);
+
+        $data['Max_User_Issuance'] = $max_issuance;
+        $array_sans_max = array_diff($data, array($max_issuance));
+        if ($array_sans_max) {
+            $second_max = max($array_sans_max);
+            if ($second_max >= 25) {
+                $data['Max_User_Issuance'] += $second_max;
+            }
         }
-        return $datedData;
+
+        $data['Total_User_Issuance'] = $total_issuance;
+        
+        return $data;
     }
 }

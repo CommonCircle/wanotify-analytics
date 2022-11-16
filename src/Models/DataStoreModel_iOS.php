@@ -9,12 +9,15 @@ class DataStoreModel_iOS extends DataStoreModel {
         'daily' => 'P1D',
         'weekly' => 'P7D',
     );
+    protected $cumulativeFields = array(
+        'Cumulative_Total' => 'Total_Adjusted',
+    );
 
     private $fieldNameMap = array(
         'Settings'                                                                                   => 'English_Settings',
         'Configuraci%C3%B3n'                                                                         => 'Spanish_US_Settings',
         '%E8%AE%BE%E7%BD%AE'                                                                         => 'Chinese_Simplified_Settings',
-        '%E8%A8%AD%E5%AE%9A'                                                                         => 'Japanese_Chinese_Settings',
+        '%E8%A8%AD%E5%AE%9A'                                                                         => 'Japanese_Chinese_Traditional_Settings',
         '%EC%84%A4%EC%A0%95'                                                                         => 'Korean_Settings',
         'C%C3%A0i%20%C4%91%E1%BA%B7t'                                                                => 'Vietnamese_Settings',
         '%D0%9D%D0%B0%D1%81%D1%82%D1%80%D0%BE%D0%B9%D0%BA%D0%B8'                                     => 'Russian_Settings',
@@ -57,29 +60,41 @@ class DataStoreModel_iOS extends DataStoreModel {
     protected function prepareData(DatedData $datedData) : DatedData {
         $dd = $datedData->getData();
         foreach ($dd as $date => $data) {
-            // $d = $this->renameFields($d);            
-            $rate = ($date < '2020-12-01' ? $this->iosFirstDayRetentionRate : $this->iosRetentionRate);
-            $data['Settings_Adjusted'] = ($data['Settings Total'] ?? 0) * $rate;
-            $data['HealthENBuddy_Adjusted'] = ($data['HealthENBuddy'] ?? 0) * $rate;
-            $data['ENBuddy_Adjusted'] = ($data['ENBuddy'] ?? 0) * $rate;
-            $data['Total_Adjusted'] = $data['Settings_Adjusted'] + $data['HealthENBuddy_Adjusted'] + $data['ENBuddy_Adjusted'];
-            $datedData->setData($date, $data);
+            // replace raw fieldnames with human-readable ones
+            $data = $this->renameFields($data);
+            // add the settings field values
+            $data['Settings_Total'] = $this->sumSettingsFields($data);
+            $data = $this->generateCalculatedFields($data);
+            $datedData->addData($date, $data);
         }
         return $datedData;
     }
 
-    private function renameFields(DatedData $datedData) {
-        $dd = $datedData->getData();
-        foreach($dd as $date => $data) {
-            $rekeyedData = array();
-            foreach ($data as $k => $d) {
-                $rekeyedData[$this->fieldNameMap[$k] ?? $k] = $d;
-            }
+    protected function calculateSumFields($data) {
+        // set the proper ios retention rate
+        // $rate = ($date < '2020-12-01' ? $this->iosFirstDayRetentionRate : $this->iosRetentionRate);
+        $rate = $this->iosRetentionRate;
+        // create the final adjusted sum fields using the rate
+        $data['Settings_Adjusted'] = ($data['Settings_Total'] ?? 0) * $rate;
+        $data['HealthENBuddy_Adjusted'] = ($data['HealthENBuddy'] ?? 0) * $rate;
+        $data['ENBuddy_Adjusted'] = ($data['ENBuddy'] ?? 0) * $rate;
+        $data['Total_Adjusted'] = $data['Settings_Adjusted'] + $data['HealthENBuddy_Adjusted'] + $data['ENBuddy_Adjusted'];
+        return $data;
+    }
+
+    private function renameFields($data) {
+        $rekeyedData = array();
+        foreach ($data as $k => $d) {
+            $rekeyedData[$this->fieldNameMap[$k] ?? $k] = $d;
         }
         return $rekeyedData;
     }
 
-    private function sumSettings($data) {
-        return;
+    private function sumSettingsFields($data) {
+        $sum = 0;
+        foreach (array_values($this->fieldNameMap) as $key) {
+            $sum += $data[$key] ?? 0;
+        }
+        return $sum;
     }
 }

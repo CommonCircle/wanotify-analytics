@@ -13,13 +13,10 @@ class DataStoreModel_ENCVAPI extends DataStoreModel {
         parent::__construct($pdo);
     }
 
-    // Synthetic fields added here
-    protected function prepareData(DatedData $datedData) : DatedData {
-        $dd = $datedData->getData();
-        foreach($dd as $date => $data) {
-            
-            $datedData->setData($date, $data);
-        }
-        return $datedData;
+    /**
+     * Override parent class upsert function to merge with current data before writing
+     */
+    protected function upsert(DatedData $dataByDate, $interval=null) {
+        return $this->mergeUpsert($dataByDate, $interval);
     }
 }

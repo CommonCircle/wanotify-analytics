@@ -3,6 +3,9 @@
 require __DIR__ . '/vendor/autoload.php';
 require __DIR__ . '/recipientList.php';
 
+// Debug override
+// $recipientList = $errorRecipientList;
+
 $tz = 'US/Pacific';
 $dt = new DateTime('now', new DateTimeZone($tz));
 $time = $dt->format('m/d/Y');
@@ -22,14 +25,14 @@ $service;
 try {
     $service = new Google_Service_Sheets($client);
 } catch (Exception $e) {
-    echo "Error connecting to service:\n";
-    echo $e."\n";
-    echo "Retrying...\n";
+    // echo "Error connecting to service:\n";
+    // echo $e."\n";
+    // echo "Retrying...\n";
     sleep(30);
     try {
         $service = new Google_Service_Sheets($client);
     } catch (Exception $e) {
-        "Failed.\n";
+        echo "Failed to data.\n$e\n";
         exit;
     }
 }
@@ -39,15 +42,15 @@ try {
     $response = $service->spreadsheets_values->get($spreadsheet_id, $get_range);
     $sheet_values = $response->getValues();
 } catch (Exception $e) {
-    echo "Error connecting to service:\n";
-    echo $e."\n";
-    echo "Retrying...\n";
+    // echo "Error connecting to service:\n";
+    // echo $e."\n";
+    // echo "Retrying...\n";
     sleep(30);
     try {
         $response = $service->spreadsheets_values->get($spreadsheet_id, $get_range);
         $sheet_values = $response->getValues();
     } catch (Exception $e) {
-        "Failed.\n";
+        echo "Failed to get current data.\n$e\n";
         exit;
     }
 }
@@ -55,14 +58,39 @@ try {
 $values = array();
 foreach ($sheet_values as $row) {
     if (sizeof($row) == 2) {
-        $values[$row[0]] = $row[1];
+        // is data row
+        if ($row[1] && $row[1] != "#VALUE!") {
+            // all data rows should have a value
+            $values[$row[0]] = $row[1];
+        } else {
+            // bad sheet data fetch, cancel, notify and run again manually
+            $subject = "WA Notify Report - Error";
+            $message = "There was a problem fetching summary values:\n\n" . json_encode($sheet_values);
+            $message .= "<p>Detailed Statistics:<br>https://docs.google.com/spreadsheets/d/$spreadsheet_id</p>";
+            $headers = "MIME-Version: 1.0\r\n";
+            $headers .= "Content-type:text/html;charset=UTF-8\r\n";
+            $headers .= "From: <wanotify@cirg.washington.edu>\r\n";
+            mail($errorRecipientList, $subject, $message, $headers);
+            exit;
+        }
     }
 }
 
-$ios = $values["Total iOS Activations"];
-$android = $values["Total Android Activations"];
-$total = $values["Total Activations"];
-$smartphone_rate = $values["Rate in smartphone owners"];
+if (isset($values["Total iOS Activations"], $values["Total Android Activations"], $values["Total Activations"], $values["Rate in smartphone owners"])) {
+	$ios = $values["Total iOS Activations"];
+	$android = $values["Total Android Activations"];
+	$total = $values["Total Activations"];
+	$smartphone_rate = $values["Rate in smartphone owners"];
+} else {
+	$subject = "WA Notify Report - Error";
+	$message = "There was a problem fetching summary values:\n\n" . json_encode($sheet_values);
+	$message .= "<p>Detailed Statistics:<br>https://docs.google.com/spreadsheets/d/$spreadsheet_id</p>";
+	$headers = "MIME-Version: 1.0\r\n";
+	$headers .= "Content-type:text/html;charset=UTF-8\r\n";
+	$headers .= "From: <wanotify@cirg.washington.edu>\r\n";
+	mail($errorRecipientList, $subject, $message, $headers);
+	exit;
+}
 
 $precision = 10000;
 $lt_threshold = 4500;
@@ -90,14 +118,14 @@ $message = "
 <title>WA Notify Summary, $time</title>
 </head>
 <body>
-<p>WA Notify user counts:</p>
+<p>WA Notify Activation Counts:</p>
 <table>
 <tr><th style='text-align:left'>Date/Time</th><td style='text-align:right'>{$dt->format('m/d/Y H:i')}</td></tr>
 <tr><th style='text-align:left'>Estimate</th><td style='text-align:right'>$est million</td></tr>
-<tr><th style='text-align:left'>Total Users</th><td style='text-align:right'>".number_format($total)."</td></tr>
-<tr><th style='text-align:left'>iOS Users</th><td style='text-align:right'>".number_format($ios)."</td></tr>
-<tr><th style='text-align:left'>Android Users</th><td style='text-align:right'>".number_format($android)."</td></tr>
-<tr><th style='text-align:left'>Rate in smartphone owners</th><td style='text-align:right'>".$smartphone_rate."</td></tr>
+<tr><th style='text-align:left'>App Activations</th><td style='text-align:right'>".number_format($total)."</td></tr>
+<tr><th style='text-align:left'>iOS Activations</th><td style='text-align:right'>".number_format($ios)."</td></tr>
+<tr><th style='text-align:left'>Android Activations</th><td style='text-align:right'>".number_format($android)."</td></tr>
+<tr><th style='text-align:left'>Activation Rate in smartphone owners</th><td style='text-align:right'>".$smartphone_rate."</td></tr>
 </table>
 <br>
 <p>Detailed Statistics:<br>https://docs.google.com/spreadsheets/d/$spreadsheet_id</p>

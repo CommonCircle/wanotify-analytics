@@ -14,20 +14,18 @@ class Importer_ENCVUsers extends Importer_ENCVStatsAPI {
         $dataArray = $data['statistics'];
         $processedDataByDate = array();
         foreach ($dataArray as $d) {
-            $date = $this->convertDate($this->ENCVDateTimeFormat, $d['date']);
+            $date = $this->convertDate($this->sourceDateTimeFormat, $d['date']);
             $row = array();
             foreach ($d['issuer_data'] as $issuer) {
                 $fieldName = "{$issuer['name']} ({$issuer['email']})";
                 $row[$fieldName] = $issuer['codes_issued'];
             }
-            if (array_sum($row)) {
-                $processedDataByDate[$date] = $row;
-            }
+            $processedDataByDate[$date] = $row;
         }
 
         $processedData = new DatedData();
         foreach ($processedDataByDate as $date => $data) {
-            $processedData->setData($date, $data);
+            $processedData->addData($date, $data);
         }
         return $processedData;
     }

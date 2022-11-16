@@ -12,14 +12,4 @@ class DataStoreModel_Cases extends DataStoreModel {
     public function __construct($pdo) {
         parent::__construct($pdo);
     }
-
-    // Synthetic fields added here
-    protected function prepareData(DatedData $datedData) : DatedData {
-        $dd = $datedData->getData();
-        foreach($dd as $date => $data) {
-            
-            $datedData->setData($date, $data);
-        }
-        return $datedData;
-    }
 }

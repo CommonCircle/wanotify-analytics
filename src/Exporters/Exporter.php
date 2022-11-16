@@ -11,7 +11,7 @@ abstract class Exporter {
 
     // Get the data from the data store and prepare it for the destination
     public function export($dataInterval, $startTime=null, $endTime=null) {
-        $data = $this->model->selectDataIntervalByDate($dataInterval, $startTime, $endTime);
+        $data = $this->model->selectDataByIntervalAndRange($dataInterval, $startTime, $endTime);
         $data = $this->prepareData($data);
         return $data;
     }
