@@ -72,13 +72,23 @@ class DataStoreModel_ENPA7 extends DataStoreModel {
         parent::__construct($pdo);
     }
 
+    // Looks for notification types (e.g. 1-4) that aren't part of a range (e.g. 1-2), multi-digit number (e.g. 11), and aren't followed by letters.
+    private function reForNotificationType($typeLabel) {
+        return "/(?<!\d-|\d)$typeLabel(?!-\d|\d|[A-Za-z])/";
+    }
+
+    private function hasNotificationType($key, $typeLabel) {
+        return preg_match($this->reForNotificationType($typeLabel), $key, $matches);
+    }
+
     // Synthetic fields added here
     protected function prepareData(DatedData $datedData) : DatedData {
         $dd = $datedData->getData();
         $change = $this->classificationLabelMaps[0];
         foreach ($dd as $date => $data) {
+            // Check if current entry is outside of current change period
             if ($date < $change['startDate'] || ($change['endDate'] && $date >= $change['endDate'])) {
-                // Find the right change period
+                // Switch to the right change period
                 foreach ($this->classificationLabelMaps as $c) {
                     if ($date >= $c['startDate'] && (!$c['endDate'] || $date < $c['endDate'])) {
                         $change = $c;
@@ -86,33 +96,15 @@ class DataStoreModel_ENPA7 extends DataStoreModel {
                     }
                 }
             }
-            // Relabel changes for the period
+            // Relabel notification types for the change period
             foreach ($data as $key => $value) {
-                // Look for a field name with a one that isn't part of a range (e.g. 1-2) or multi-digit number (e.g. 11)
-                if (preg_match("/(?<!\d-|\d)1(?!-\d|\d)/", $key, $matches) && array_key_exists('1', $change['map'])) {
-                    $label = $change['map']['1'];
-                    if ($label !== null) {
-                            $data[preg_replace("/(?<!\d-|\d)1(?!-\d|\d)/", " " . $label, $key, 1)] = $data[$key];
-                    }
-                    unset($data[$key]);
-                } else if (preg_match("/(?<!\d-|\d)2(?!-\d|\d)/", $key, $matches) && array_key_exists('2', $change['map'])) {
-                    $label = $change['map']['2'];
-                    if ($label !== null) {
-                            $data[preg_replace("/(?<!\d-|\d)2(?!-\d|\d)/", " " . $label, $key, 1)] = $data[$key];
-                    }
-                    unset($data[$key]);
-                } else if (preg_match("/(?<!\d-|\d)3(?!-\d|\d)/", $key, $matches) && array_key_exists('3', $change['map'])) {
-                    $label = $change['map']['3'];
-                    if ($label !== null) {
-                            $data[preg_replace("/(?<!\d-|\d)3(?!-\d|\d)/", " " . $label, $key, 1)] = $data[$key];
-                    }
-                    unset($data[$key]);
-                } else if (preg_match("/(?<!\d-|\d)4(?!-\d|\d)/", $key, $matches) && array_key_exists('4', $change['map'])) {
-                    $label = $change['map']['4'];
-                    if ($label !== null) {
-                            $data[preg_replace("/(?<!\d-|\d)4(?!-\d|\d)/", " " . $label, $key, 1)] = $data[$key];
-                    }
-                    unset($data[$key]);
+                foreach ($change['map'] as $notificationType => $label) {
+                    if ($this->hasNotificationType($key, $notificationType)) {
+                        if ($label !== null) {
+                                $data[preg_replace($this->reForNotificationType($notificationType), " " . $label, $key, 1)] = $data[$key];
+                        }
+                        unset($data[$key]);
+                    }    
                 }
             }
 
