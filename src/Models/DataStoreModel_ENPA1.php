@@ -74,7 +74,7 @@ class DataStoreModel_ENPA1 extends DataStoreModel {
 
     // Looks for notification types (e.g. 1-4) that aren't part of a range (e.g. 1-2), multi-digit number (e.g. 11), and aren't followed by letters.
     private function reForNotificationType($typeLabel) {
-        return "/(?<!\d-|\d)$typeLabel(?!-\d|\d|[A-Za-z])/";
+        return "/(?<!\d-|\d|de)$typeLabel(?!-\d|\d|[A-Za-z])/";
     }
 
     private function hasNotificationType($key, $typeLabel) {
@@ -101,13 +101,12 @@ class DataStoreModel_ENPA1 extends DataStoreModel {
                 foreach ($change['map'] as $notificationType => $label) {
                     if ($this->hasNotificationType($key, $notificationType)) {
                         if ($label !== null) {
-                                $data[preg_replace($this->reForNotificationType($notificationType), " " . $label, $key, 1)] = $data[$key];
+                            $data[preg_replace($this->reForNotificationType($notificationType), " " . $label, $key, 1)] = $data[$key];
+                            unset($data[$key]);
                         }
-                        unset($data[$key]);
                     }    
                 }
             }
-
             $datedData->addData($date, $data);
         }
         return $datedData;
