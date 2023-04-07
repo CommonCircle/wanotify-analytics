@@ -9,7 +9,7 @@ abstract class Importer_ENPA extends Importer_JsonFile {
     protected function processData($data) : DatedData {
         $dataArray = $data;
         $processedDataByDate = array();
-        $max_rollup = max(array_column($d, 'days'));
+        $max_rollup = max(array_column($dataArray, 'days'));
         foreach ($dataArray as $d) {
             if ($d['days'] == $max_rollup) {
                 $date = $this->convertDate($this->sourceDateTimeFormat, $d['date']);
