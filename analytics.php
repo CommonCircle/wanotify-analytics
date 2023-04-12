@@ -20,6 +20,7 @@ $show = array(
 "/next-steps-count-30.120",
 "/next-steps-count-2.8",
 "/next-steps-count-8.24",
+"/sunset",
 // "/next-steps",
 // "/uw-next-steps",
 // "/wanotify-ios-install.mobileconfig",
@@ -40,6 +41,7 @@ $show = array(
 "/ExposureNotification/exposure/tl",
 "/ExposureNotification/exposure/tr",
 "/ExposureNotification/exposure/uk",
+"/ExposureNotification/exposure/next-steps",
 );
 
 // subset of shown resources to bin by user agent
@@ -53,6 +55,7 @@ $by_user = array(
     "/next-steps-count-30.120",
     "/next-steps-count-2.8",
     "/next-steps-count-8.24",
+    "/sunset",
     "/ExposureNotification/exposure/",
     "/ExposureNotification/exposure/en",
     "/ExposureNotification/exposure/es",
