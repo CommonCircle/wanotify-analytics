@@ -79,13 +79,18 @@ class DataStoreModel_iOS extends DataStoreModel {
         $data['HealthENBuddy_Adjusted'] = ($data['HealthENBuddy'] ?? 0) * $rate;
         $data['ENBuddy_Adjusted'] = ($data['ENBuddy'] ?? 0) * $rate;
         $data['Total_Adjusted'] = $data['Settings_Adjusted'] + $data['HealthENBuddy_Adjusted'] + $data['ENBuddy_Adjusted'];
+        $data['Total_304'] = ($data['HealthENBuddy_304'] ?? 0) + ($data['ENBuddy_304'] ?? 0) + ($data['Google-ENExpress_304'] ?? 0);
         return $data;
     }
 
     private function renameFields($data) {
         $rekeyedData = array();
         foreach ($data as $k => $d) {
-            $rekeyedData[$this->fieldNameMap[$k] ?? $k] = $d;
+            if (strpos($k, "_304") !== false) {
+                $rekeyedData[$this->fieldNameMap[substr($k, 0, strlen($k)-4)] ?? $k] = $d;
+            } else {
+                $rekeyedData[$this->fieldNameMap[$k] ?? $k] = $d;
+            }
         }
         return $rekeyedData;
     }

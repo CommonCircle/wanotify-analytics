@@ -10,8 +10,8 @@ $tz = 'US/Pacific';
 $dt = new DateTime('now', new DateTimeZone($tz));
 $time = $dt->format('m/d/Y');
 
-$spreadsheet_id = '1DQyZUBLnlshJx6ptFxKusl7KUUN8j-I2zWCNH-3ULGU';
-$sheet_name = "'Summary Data'";
+$spreadsheet_id = '1WyK1B1ik9t5y2dMcNbO8pj8D8Na7khpeazertAGq1c0';
+$sheet_name = "'Scalars'";
 $range = "A1:B18"; // summary totals
 $get_range = $sheet_name . "!" . $range;
 
@@ -28,7 +28,7 @@ try {
     // echo "Error connecting to service:\n";
     // echo $e."\n";
     // echo "Retrying...\n";
-    sleep(30);
+    // sleep(30);
     try {
         $service = new Google_Service_Sheets($client);
     } catch (Exception $e) {
@@ -45,7 +45,7 @@ try {
     // echo "Error connecting to service:\n";
     // echo $e."\n";
     // echo "Retrying...\n";
-    sleep(30);
+    // sleep(30);
     try {
         $response = $service->spreadsheets_values->get($spreadsheet_id, $get_range);
         $sheet_values = $response->getValues();

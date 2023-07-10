@@ -6,7 +6,7 @@ $recipients = array(
     "bryant.karras@doh.wa.gov",
     "andrea.king@doh.wa.gov",
     "amanda.higgins@doh.wa.gov",
-    "DOH-Web@doh.wa.gov",
+    // "DOH-Web@doh.wa.gov",
     "lauram.west@doh.wa.gov",
 );
 $errorRecipients = array(

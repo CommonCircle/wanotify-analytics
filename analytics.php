@@ -42,6 +42,7 @@ $show = array(
 "/ExposureNotification/exposure/tr",
 "/ExposureNotification/exposure/uk",
 "/ExposureNotification/exposure/next-steps",
+"/wa-notify-banner-simple-purple.png"
 );
 
 // subset of shown resources to bin by user agent
@@ -85,6 +86,7 @@ $by_user = array(
     "/ExposureNotification/exposure/uk",
     "/ExposureNotification/exposure/ur",
     "/ExposureNotification/exposure/next-steps",
+    "/wa-notify-banner-simple-purple.png"
 );
 $log_output = false;
 

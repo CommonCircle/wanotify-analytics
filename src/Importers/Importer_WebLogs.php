@@ -36,7 +36,12 @@ class Importer_WebLogs extends Importer_JsonFile {
                 foreach ($fields as $field) {
                     $newField = ($byUserAgent && !$this->onlyUserAgentInFieldName) ? $resourceName . " " . $field : $field;
                     foreach ($datetimes as $dt) {
-                        $processedDataByDate[$dt][$newField] = $dataArray[$field][$dt]['200'] ?? 0;
+                        $value = $dataArray[$field][$dt]['200'] ?? 0;
+                        $processedDataByDate[$dt][$newField] = $value;
+                        if ($resourceName == "iOS installs") {
+                            $value304 = $dataArray[$field][$dt]['304'] ?? 0;
+                            $processedDataByDate[$dt][$newField . '_304'] = $value;
+                        }
                     }
                 }
             }

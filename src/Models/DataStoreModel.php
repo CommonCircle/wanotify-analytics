@@ -353,17 +353,17 @@ class DataStoreModel {
 
     // Returns the sum of the specified fields
     protected function sum($d, ...$fields) {
-        return array_sum(array_filter($d, function($k) {
+        return array_sum(array_filter($d, function($k) use ($fields) {
             return in_array($k, $fields);
         }, ARRAY_FILTER_USE_KEY));
     }
 
     // TODO
     protected function sumAll($fieldName, $data, ...$fields) {
-        return array_map(function($d){
+        return array_map(function($d) use ($fieldName, $fields) {
             $d[$fieldName] = $this->sum($d, ...$fields);
             return $d;
-        },);
+        }, $data);
     }
 
 }

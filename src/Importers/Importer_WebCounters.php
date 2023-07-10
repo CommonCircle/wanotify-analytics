@@ -17,6 +17,7 @@ class Importer_WebCounters extends Importer_WebLogs {
             "/next-steps-count-30.120",
             "/next-steps-count-2.8",
             "/next-steps-count-8.24",
+            "/sunset",
         );
         $model = new DataStoreModel_WebCounters($pdo);
         parent::__construct($model, $location, $authType, $authVal);

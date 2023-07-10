@@ -5,6 +5,7 @@ require_once MODEL_DIR . '/DataStoreModel_Matomo_Actions.php';
 
 class Importer_Matomo_Actions extends Importer_Matomo {
     private $labelNameMap = array(
+        "/sunset" => "Sunset_Count",
         "/next-steps-count" => "Standard_Count",
         "/next-steps-count-30" => "Extended_Count",
         "/next-steps-count-sr" => "SR_Count",
